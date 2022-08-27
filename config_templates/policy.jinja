@@ -1,0 +1,54 @@
+{% set interfaces = property_sets.system_properties.interfaces %}
+policy-options {
+    replace: policy-statement ALLOW_LOOPBACK {
+        from {
+            interface lo0.0;
+            route-filter {{ interfaces.lo0.address }} exact;
+        }
+        then accept;
+    }
+    {% if property_sets.system_properties.role == "leaf" %}
+      {% set policies = property_sets.system_properties.policies.policy_statements %}
+      {% set communities = property_sets.system_properties.communities %}
+      {% for policy in policies %}
+    replace: policy-statement {{ policy }} {
+          {% for term_name, term_value in policies[policy].terms.items() %}
+        term {{ term_name }} {
+            from community {{ term_value.community }};
+            then accept;
+        }
+          {% endfor %}
+        term default {
+            then reject;
+        }
+    }
+      {% endfor %}
+    {% if property_sets.system_properties.block_remote_gw_list %}
+    replace: policy-statement BLOCK_REMOTE_GW {
+        term reject {
+            from {
+                family evpn;
+                next-hop [ {% for remote_gw in property_sets.system_properties.block_remote_gw_list %} {{ remote_gw }} {% endfor %} ];
+                nlri-route-type [ 1 2 ];
+            }
+            then reject;
+        }
+        term accept {
+            then accept;
+        }
+    }
+    {% endif %}
+    {% endif %}
+    policy-statement ECMP {
+        then {
+            load-balance per-packet;
+        }
+    }
+    {% if property_sets.system_properties.role == "leaf" %}
+      {% for comm_name, comm_members in communities.items() %}
+        {% for member in comm_members %}
+    replace: community {{ comm_name }} members {{ member }};
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+}
