@@ -1,0 +1,40 @@
+{% set interfaces = property_sets.system_properties.interfaces %}
+{% set irb = property_sets.system_properties.irb %}
+interfaces {
+{% for interface in interfaces %}
+  {% if interfaces[interface].l3 == "yes" and interfaces[interface].irb == "no" %}
+    replace: {{ interface }} {
+        unit 0 {
+            family inet {
+                address {{ interfaces[interface].address }};
+            }
+        }
+    }
+  {% else %}
+    replace: {{ interface }} {
+        unit 0 {
+            family ethernet-switching {
+                interface-mode access;
+                vlan {
+                    members {{ interfaces[interface].vlan }};
+                }
+            }
+        }
+    }
+  {% endif %}
+{% endfor %}
+{% if property_sets.system_properties.crb_enabled %}
+    replace: irb {
+    {% for unit in irb %}
+        unit {{ unit }} {
+            virtual-gateway-accept-data;
+            family inet {
+                address {{ irb[unit].address }} {
+                    virtual-gateway-address {{ irb[unit].vga }};
+                }
+            }
+        }
+    {% endfor %}
+    }
+{% endif %}
+}
