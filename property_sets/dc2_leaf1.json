@@ -1,0 +1,86 @@
+{
+  "role": "leaf",
+  "interfaces": {
+    "xe-0/0/6": {
+      "irb": "no",
+      "vlan": "200",
+      "l3": "no"
+    },
+    "lo0": {
+      "irb": "no",
+      "l3": "yes",
+      "address": "192.168.10.3/32"
+    },
+    "xe-0/0/5": {
+      "irb": "no",
+      "vlan": "100",
+      "l3": "no"
+    },
+    "xe-0/0/0": {
+      "irb": "no",
+      "l3": "yes",
+      "address": "10.10.0.15/31"
+    }
+  },
+  "vlans": {
+    "100": {
+      "rt": "100:100",
+      "interfaces": [
+        "xe-0/0/5"
+      ],
+      "name": "VLAN100",
+      "vni": "10100"
+    },
+    "200": {
+      "rt": "200:200",
+      "interfaces": [
+        "xe-0/0/6"
+      ],
+      "name": "VLAN200",
+      "vni": "10200"
+    }
+  },
+  "policies": {
+    "policy_statements": {
+      "DC2_Import": {
+        "terms": {
+          "dc1_type1_evpn": {
+            "community": "dc1_type1"
+          },
+          "dc2_type1_evpn": {
+            "community": "dc2_type1"
+          }
+        }
+      }
+    }
+  },
+  "communities": {
+    "dc1_type1": [
+      "target:65500:1"
+    ],
+    "dc2_type1": [
+      "target:65501:1"
+    ]
+  },
+  "block_remote_gw_list": [
+    "192.168.100.11",
+    "192.168.100.12"
+  ],
+  "bgp": {
+    "router_id": "192.168.10.3",
+    "as_number": "65423",
+    "neighbors": {
+      "10.10.0.14": {
+        "remote_as": "65501",
+        "loopback": "192.168.100.3"
+      }
+    }
+  },
+  "crb_enabled": false,
+  "location": "DC2",
+  "switch_options": {
+    "rd": "192.168.10.3:65423",
+    "vrf_target": "65423:1",
+    "vtep_source": "lo0.0"
+  }
+}
